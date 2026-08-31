@@ -1,0 +1,39 @@
+[package]
+name = "hey-listen"
+version = "0.1.0"
+edition = "2021"
+
+# The crate is a library (the reusable engine) plus two binaries that drive it:
+# a CLI and a GUI. Keeping one library means one source of truth for behavior.
+[lib]
+name = "hey_listen"
+path = "src/lib.rs"
+
+[[bin]]
+name = "hey-listen"        # the CLI
+path = "src/main.rs"
+
+[[bin]]
+name = "hey-listen-gui"    # the egui window; only builds with --features gui
+path = "src/gui.rs"
+required-features = ["gui"]
+
+# Each dependency below has a one-line note on WHY it is here.
+[dependencies]
+cpal = "0.15"                                             # cross-platform audio capture (mic / aggregate device)
+hound = "3"                                               # read + write WAV files (we write 16 kHz mono WAV for whisper)
+anyhow = "1"                                              # ergonomic error handling: `?` on any error, with context
+ctrlc = "3"                                               # catch Ctrl-C so we can flush + summarize before exit
+chrono = "0.4"                                            # timestamps for transcript / summary filenames
+serde = { version = "1", features = ["derive"] }          # (de)serialize structs to/from JSON
+serde_json = "1"                                          # build the JSON body we POST to Ollama
+reqwest = { version = "0.12", features = ["blocking", "json"] }  # HTTP client to call the local Ollama API
+eframe = { version = "0.35", optional = true }            # egui GUI framework; only pulled in for the GUI build
+
+# The GUI is behind a feature so a plain `cargo build` (the CLI) stays light.
+[features]
+gui = ["dep:eframe"]
+
+# A release build is much faster for real-time audio. Build with: cargo run --release
+[profile.release]
+opt-level = 3
